@@ -1,0 +1,23 @@
+# Compiled class files
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Maven wrapper downloaded Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Auto-generated data files
+hotel_data/
+
+# Log files
+*.log
