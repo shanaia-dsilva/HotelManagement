@@ -2,13 +2,14 @@ package com.hotel.ui;
 
 import com.hotel.model.Customer;
 import com.hotel.service.HotelDataService;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
 /**
  * Customer management view — displays all active customers
- * in a structured table format.
+ * in a structured table format with a dynamic guest count.
  */
 public class CustomerView {
 
@@ -51,10 +52,12 @@ public class CustomerView {
         TableColumn<Customer, Number> colId = new TableColumn<>("Customer ID");
         colId.setCellValueFactory(cd -> cd.getValue().customerIdProperty());
         colId.setPrefWidth(120);
+        colId.setSortable(true);
 
         TableColumn<Customer, String> colName = new TableColumn<>("Name");
         colName.setCellValueFactory(cd -> cd.getValue().nameProperty());
         colName.setPrefWidth(200);
+        colName.setSortable(true);
 
         TableColumn<Customer, String> colContact = new TableColumn<>("Contact Number");
         colContact.setCellValueFactory(cd -> cd.getValue().contactNumberProperty());
@@ -63,6 +66,7 @@ public class CustomerView {
         TableColumn<Customer, Number> colRoom = new TableColumn<>("Room Number");
         colRoom.setCellValueFactory(cd -> cd.getValue().roomNumberProperty());
         colRoom.setPrefWidth(140);
+        colRoom.setSortable(true);
 
         table.getColumns().addAll(colId, colName, colContact, colRoom);
         table.setItems(dataService.getCustomers());
@@ -70,10 +74,15 @@ public class CustomerView {
         // Empty state placeholder
         table.setPlaceholder(new Label("No active guests. Create a booking to add customers."));
 
-        // ---- Stats ----
-        long count = dataService.getCustomers().size();
-        Label statsLabel = new Label("📊  Total Active Guests: " + count);
+        // ---- Dynamic Stats Label — auto-updates when customer list changes ----
+        Label statsLabel = new Label();
         statsLabel.getStyleClass().add("stats-label");
+        statsLabel.textProperty().bind(
+                Bindings.createStringBinding(
+                        () -> "📊  Total Active Guests: " + dataService.getCustomers().size(),
+                        dataService.getCustomers()
+                )
+        );
 
         container.getChildren().addAll(headerBox, infoBanner, table, statsLabel);
         return container;

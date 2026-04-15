@@ -412,6 +412,13 @@
     -fx-padding: 0 0 8px 0;
 }
 
+.form-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -text-secondary;
+    -fx-padding: 0 4px 0 0;
+}
+
 .form-input {
     -fx-background-color: -bg-primary;
     -fx-text-fill: -text-primary;

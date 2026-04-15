@@ -4,9 +4,9 @@ import com.hotel.model.Room;
 import com.hotel.service.HotelDataService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -16,7 +16,7 @@ import javafx.scene.shape.Circle;
 
 /**
  * Room management view — displays room table with search/filter,
- * and a form to add new rooms.
+ * and a GridPane-based form to add new rooms.
  */
 public class RoomView {
 
@@ -76,25 +76,39 @@ public class RoomView {
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         VBox.setVgrow(table, Priority.ALWAYS);
+        table.setPlaceholder(new Label("No rooms found. Add a room or adjust your filters."));
 
         TableColumn<Room, Number> colNum = new TableColumn<>("Room #");
         colNum.setCellValueFactory(cd -> cd.getValue().roomNumberProperty());
         colNum.setPrefWidth(100);
-        colNum.getStyleClass().add("center-column");
+        colNum.setSortable(true);
 
         TableColumn<Room, String> colType = new TableColumn<>("Type");
         colType.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getRoomType().toString()));
         colType.setPrefWidth(120);
+        colType.setSortable(true);
 
-        TableColumn<Room, String> colPrice = new TableColumn<>("Price / Day");
-        colPrice.setCellValueFactory(cd -> new SimpleStringProperty(
-                String.format("₹ %.0f", cd.getValue().getPricePerDay())));
+        TableColumn<Room, Number> colPrice = new TableColumn<>("Price / Day");
+        colPrice.setCellValueFactory(cd -> cd.getValue().pricePerDayProperty());
         colPrice.setPrefWidth(130);
+        colPrice.setSortable(true);
+        colPrice.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("₹ %.0f", item.doubleValue()));
+                }
+            }
+        });
 
         TableColumn<Room, String> colStatus = new TableColumn<>("Status");
         colStatus.setCellValueFactory(cd -> new SimpleStringProperty(
                 cd.getValue().isAvailable() ? "Available" : "Occupied"));
         colStatus.setPrefWidth(140);
+        colStatus.setSortable(true);
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -108,13 +122,11 @@ public class RoomView {
                     if ("Available".equals(item)) {
                         dot.setFill(Color.web("#4ade80"));
                         setText("  Available");
-                        getStyleClass().removeAll("status-occupied");
-                        getStyleClass().add("status-available");
+                        setStyle("-fx-text-fill: #4ade80; -fx-font-weight: 600;");
                     } else {
                         dot.setFill(Color.web("#f87171"));
                         setText("  Occupied");
-                        getStyleClass().removeAll("status-available");
-                        getStyleClass().add("status-occupied");
+                        setStyle("-fx-text-fill: #f87171; -fx-font-weight: 600;");
                     }
                     setGraphic(dot);
                 }
@@ -135,22 +147,49 @@ public class RoomView {
         sortedData.comparatorProperty().bind(table.comparatorProperty());
         table.setItems(sortedData);
 
-        // ---- Add Room Form ----
+        // ---- Add Room Form (GridPane layout as required) ----
         Label formHeader = new Label("➕  Add New Room");
         formHeader.getStyleClass().add("form-header");
 
+        GridPane formGrid = new GridPane();
+        formGrid.setHgap(10);
+        formGrid.setVgap(14);
+
+        Label lblRoomNum = new Label("Room Number:");
+        lblRoomNum.getStyleClass().add("form-label");
         roomNumberInput = new TextField();
-        roomNumberInput.setPromptText("Room Number (e.g. 105)");
+        roomNumberInput.setPromptText("e.g. 105");
         roomNumberInput.getStyleClass().add("form-input");
 
+        Label lblRoomType = new Label("Room Type:");
+        lblRoomType.getStyleClass().add("form-label");
         roomTypeInput = new ComboBox<>(FXCollections.observableArrayList(Room.RoomType.values()));
-        roomTypeInput.setPromptText("Select Room Type");
+        roomTypeInput.setPromptText("Select Type");
         roomTypeInput.getStyleClass().add("form-input");
         roomTypeInput.setMaxWidth(Double.MAX_VALUE);
 
+        Label lblPrice = new Label("Price / Day:");
+        lblPrice.getStyleClass().add("form-label");
         priceInput = new TextField();
-        priceInput.setPromptText("Price per Day (₹)");
+        priceInput.setPromptText("₹");
         priceInput.getStyleClass().add("form-input");
+
+        // Add to grid: col 0 = labels, col 1 = inputs
+        formGrid.add(lblRoomNum, 0, 0);
+        formGrid.add(roomNumberInput, 1, 0);
+        formGrid.add(lblRoomType, 0, 1);
+        formGrid.add(roomTypeInput, 1, 1);
+        formGrid.add(lblPrice, 0, 2);
+        formGrid.add(priceInput, 1, 2);
+
+        // Make inputs fill available width
+        ColumnConstraints col0 = new ColumnConstraints();
+        col0.setMinWidth(90);
+        col0.setHalignment(HPos.RIGHT);
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setHgrow(Priority.ALWAYS);
+        col1.setFillWidth(true);
+        formGrid.getColumnConstraints().addAll(col0, col1);
 
         // Auto-fill price based on type
         roomTypeInput.valueProperty().addListener((obs, oldVal, newVal) -> {
@@ -163,19 +202,20 @@ public class RoomView {
             }
         });
 
-        Button addBtn = new Button("Add Room");
+        Button addBtn = new Button("➕  Add Room");
         addBtn.getStyleClass().add("btn-primary");
         addBtn.setMaxWidth(Double.MAX_VALUE);
         addBtn.setOnAction(e -> handleAddRoom());
 
         statusLabel = new Label();
         statusLabel.getStyleClass().add("status-message");
+        statusLabel.setWrapText(true);
 
-        VBox formBox = new VBox(12, formHeader, roomNumberInput, roomTypeInput, priceInput, addBtn, statusLabel);
+        VBox formBox = new VBox(14, formHeader, formGrid, addBtn, statusLabel);
         formBox.getStyleClass().add("form-card");
         formBox.setPadding(new Insets(20));
-        formBox.setPrefWidth(280);
-        formBox.setMinWidth(260);
+        formBox.setPrefWidth(300);
+        formBox.setMinWidth(280);
 
         // ---- Layout ----
         VBox tableSection = new VBox(12, searchBar, table);
@@ -220,6 +260,7 @@ public class RoomView {
         Room.RoomType type = roomTypeInput.getValue();
         String priceText = priceInput.getText().trim();
 
+        // Validation
         if (numText.isEmpty() || type == null || priceText.isEmpty()) {
             showError("Please fill in all fields");
             return;
@@ -248,7 +289,16 @@ public class RoomView {
             return;
         }
 
+        // Add room
         dataService.addRoom(new Room(roomNum, type, price));
+
+        // Show success alert
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Room Added");
+        alert.setHeaderText(null);
+        alert.setContentText("Room " + roomNum + " (" + type + ") added successfully at ₹" + String.format("%.0f", price) + "/day!");
+        alert.show();
+
         showSuccess("Room " + roomNum + " added successfully!");
         clearForm();
     }

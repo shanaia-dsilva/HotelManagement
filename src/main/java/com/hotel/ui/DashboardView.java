@@ -17,6 +17,7 @@ public class DashboardView {
     private final HotelDataService dataService;
     private VBox root;
 
+    // Direct references to value labels (no lookup needed)
     private Label totalRoomsValue;
     private Label availableRoomsValue;
     private Label occupiedRoomsValue;
@@ -27,6 +28,7 @@ public class DashboardView {
     public DashboardView(HotelDataService dataService) {
         this.dataService = dataService;
         this.root = buildView();
+        refresh(); // Initial data load after UI is built
     }
 
     public VBox getView() { return root; }
@@ -45,7 +47,7 @@ public class DashboardView {
     }
 
     private VBox buildView() {
-        VBox container = new VBox(30);
+        VBox container = new VBox(24);
         container.getStyleClass().add("content-area");
         container.setPadding(new Insets(30));
 
@@ -58,34 +60,31 @@ public class DashboardView {
 
         VBox headerBox = new VBox(4, header, subtitle);
 
-        // ---- Metric Cards ----
-        HBox cardsRow1 = new HBox(20);
+        // ---- Metric Cards Row 1 ----
+        totalRoomsValue = new Label("0");
+        VBox totalCard = createMetricCard("Total Rooms", "🏠", "#6366f1", "#818cf8", totalRoomsValue);
+
+        availableRoomsValue = new Label("0");
+        VBox availableCard = createMetricCard("Available", "✅", "#22c55e", "#4ade80", availableRoomsValue);
+
+        occupiedRoomsValue = new Label("0");
+        VBox occupiedCard = createMetricCard("Occupied", "🔒", "#ef4444", "#f87171", occupiedRoomsValue);
+
+        HBox cardsRow1 = new HBox(20, totalCard, availableCard, occupiedCard);
         cardsRow1.setAlignment(Pos.CENTER_LEFT);
 
-        VBox totalCard = createMetricCard("Total Rooms", "🏠", "#6366f1", "#818cf8");
-        totalRoomsValue = (Label) totalCard.lookup("#metric-value");
+        // ---- Metric Cards Row 2 ----
+        activeBookingsValue = new Label("0");
+        VBox bookingsCard = createMetricCard("Active Bookings", "📅", "#f59e0b", "#fbbf24", activeBookingsValue);
 
-        VBox availableCard = createMetricCard("Available", "✅", "#22c55e", "#4ade80");
-        availableRoomsValue = (Label) availableCard.lookup("#metric-value");
+        revenueValue = new Label("₹ 0");
+        VBox revenueCard = createMetricCard("Total Revenue", "💰", "#10b981", "#34d399", revenueValue);
 
-        VBox occupiedCard = createMetricCard("Occupied", "🔒", "#ef4444", "#f87171");
-        occupiedRoomsValue = (Label) occupiedCard.lookup("#metric-value");
+        occupancyValue = new Label("0.0%");
+        VBox occupancyCard = createMetricCard("Occupancy Rate", "📈", "#8b5cf6", "#a78bfa", occupancyValue);
 
-        cardsRow1.getChildren().addAll(totalCard, availableCard, occupiedCard);
-
-        HBox cardsRow2 = new HBox(20);
+        HBox cardsRow2 = new HBox(20, bookingsCard, revenueCard, occupancyCard);
         cardsRow2.setAlignment(Pos.CENTER_LEFT);
-
-        VBox bookingsCard = createMetricCard("Active Bookings", "📅", "#f59e0b", "#fbbf24");
-        activeBookingsValue = (Label) bookingsCard.lookup("#metric-value");
-
-        VBox revenueCard = createMetricCard("Total Revenue", "💰", "#10b981", "#34d399");
-        revenueValue = (Label) revenueCard.lookup("#metric-value");
-
-        VBox occupancyCard = createMetricCard("Occupancy Rate", "📈", "#8b5cf6", "#a78bfa");
-        occupancyValue = (Label) occupancyCard.lookup("#metric-value");
-
-        cardsRow2.getChildren().addAll(bookingsCard, revenueCard, occupancyCard);
 
         // ---- Welcome Message ----
         VBox welcomeBox = new VBox(10);
@@ -103,16 +102,12 @@ public class DashboardView {
         welcomeText.getStyleClass().add("welcome-text");
         welcomeText.setWrapText(true);
 
-        HBox quickActions = new HBox(12);
-        quickActions.setAlignment(Pos.CENTER_LEFT);
-        quickActions.setPadding(new Insets(10, 0, 0, 0));
-
         Label quickLabel = new Label("Quick Tips:");
         quickLabel.getStyleClass().add("quick-tip-title");
 
         Label tip1 = createTipBadge("💡  Use search to find rooms instantly");
         Label tip2 = createTipBadge("🎨  Toggle dark/light mode in the header");
-        Label tip3 = createTipBadge("💾  Data auto-saves to local files");
+        Label tip3 = createTipBadge("💾  Data auto-saves to local JSON files");
 
         VBox tipsBox = new VBox(8, quickLabel, tip1, tip2, tip3);
         tipsBox.setPadding(new Insets(10, 0, 0, 0));
@@ -120,14 +115,10 @@ public class DashboardView {
         welcomeBox.getChildren().addAll(welcomeTitle, welcomeText, tipsBox);
 
         container.getChildren().addAll(headerBox, cardsRow1, cardsRow2, welcomeBox);
-
-        // Initial refresh
-        refresh();
-
         return container;
     }
 
-    private VBox createMetricCard(String title, String icon, String color1, String color2) {
+    private VBox createMetricCard(String title, String icon, String color1, String color2, Label valueLabel) {
         VBox card = new VBox(8);
         card.getStyleClass().add("metric-card");
         card.setPadding(new Insets(20));
@@ -145,8 +136,6 @@ public class DashboardView {
         iconPane.setAlignment(Pos.CENTER_LEFT);
         iconPane.setMaxWidth(50);
 
-        Label valueLabel = new Label("0");
-        valueLabel.setId("metric-value");
         valueLabel.getStyleClass().add("metric-value");
         valueLabel.setStyle("-fx-text-fill: " + color2 + ";");
 
