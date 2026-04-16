@@ -91,7 +91,7 @@ public class DashboardView {
         welcomeBox.getStyleClass().add("welcome-card");
         welcomeBox.setPadding(new Insets(25));
 
-        Label welcomeTitle = new Label("Welcome to Grand Hotel Manager");
+        Label welcomeTitle = new Label("Welcome to Shanaia's Grand Hotel");
         welcomeTitle.getStyleClass().add("welcome-title");
 
         Label welcomeText = new Label(

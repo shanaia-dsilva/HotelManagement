@@ -66,7 +66,7 @@ public class HotelManagementApp extends Application {
         scene = new Scene(rootLayout, 1280, 820);
         scene.getStylesheets().add(getClass().getResource("/com/hotel/styles.css").toExternalForm());
 
-        primaryStage.setTitle("Grand Hotel Manager");
+        primaryStage.setTitle("Shanaia's Grand Hotel");
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(1000);
         primaryStage.setMinHeight(700);
@@ -83,7 +83,7 @@ public class HotelManagementApp extends Application {
         Label logo = new Label("🏨");
         logo.setStyle("-fx-font-size: 28px;");
 
-        Label title = new Label("Grand Hotel Manager");
+        Label title = new Label("Shanaia's Grand Hotel");
         title.getStyleClass().add("app-title");
 
         Region spacer = new Region();
